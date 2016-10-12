@@ -7,8 +7,8 @@ so ``Inactive(file)`` becomes ``inactive_file``.
 ``check_memory -t TYPE -w WARN -c CRIT [-u UNIT] [-i]``
 
 - ``-t TYPE``: possible values are parsed from ``/proc/meminfo`` 
-- ``-w WARN``: if value is higher or same, warning state
-- ``-c CRIT``: if value is higher or same, critical state
+- ``-w WARN``: if value is higher (or smaller with `-i`), warning state
+- ``-c CRIT``: if value is higher (or smaller with `-i`), critical state
 - ``-u UNIT``: 0-3, exponent of 1024 to divide values by, default is 0, returning kB values, 1 will return MiB values, 2 will return GiB values, 3 will return TiB values
 - ``-i``: inverts the check, without this switch the measured value must not be bigger than warn and crit, with -i it must be at least as big as warn and crit
 
