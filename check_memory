@@ -1,0 +1,88 @@
+#!/usr/bin/php
+<?php
+$mi = file_get_contents('/proc/meminfo');
+
+// get params
+
+$params = getopt('t:w:c:u:i');
+
+// check params
+
+$p_invert = array_key_exists('i', $params);
+$p_type = array_key_exists('t', $params) ? $params['t'] : null;
+$p_warn = array_key_exists('w', $params) ? $params['w'] : null;
+$p_crit = array_key_exists('c', $params) ? $params['c'] : null;
+$p_unit = array_key_exists('u', $params) ? $params['u'] : null;
+
+// parse meminfo
+
+$values = array();
+preg_match_all('/^([^:]+):[\s]+([0-9]+)/m', $mi, $matches, PREG_SET_ORDER);
+foreach($matches as $set) {
+   $l = strtolower($set[1]);
+   $l = preg_replace('/[^a-z]/', '_', $l);
+   $l = trim($l, '_');
+   $values[$l] = $set[2];
+}
+
+// validity of param
+
+$p_warn = preg_match('/^[0-9]+$/', $p_warn) ? $p_warn : null;
+$p_crit = preg_match('/^[0-9]+$/', $p_crit) ? $p_crit : null;
+$p_unit = preg_match('/^(0|1|2|3)$/', $p_unit) ? $p_unit : 1;
+$p_type = array_key_exists($p_type, $values) ? $p_type : null;
+
+if($p_type === null || 
+   $p_warn === null ||
+   $p_crit === null
+) {
+   echo "Usage:\n";
+   echo "check_memory -t TYPE -w WARN -c CRIT [-u UNIT] [-i]\n";
+   echo "\n";
+   echo "-t TYPE: ".implode(", ", array_keys($values))."\n";
+   echo "-w WARN: if value is higher or same, warning state\n";
+   echo "-c CRIT: if value is higher or same, critical state\n";
+   echo "-u UNIT: 0-3, exponent of 1024 to divide values by, default is 0, returning kB values, 1 will return MiB values, 2 will return GiB values\n";
+   echo "-i: inverts the check, without this switch the measured value must not be bigger than warn and crit, with -i it must be at least as big as warn and crit\n";
+   echo "\n";
+   echo "EXAMPLES:\n";
+   echo "check_memory -t committed_as -w 6 -c 12 -u 2\n";
+   echo "\tcritical if commited memory is at least 12 GiB, warns when it reaches 6 GiB\n";
+   exit(3);
+}
+
+// check values
+
+$value = (double)$values[$p_type];
+$value /= pow(1024, $p_unit);
+
+$unit_labels = array(
+   "kB",
+   "MiB",
+   "GiB",
+   "TiB",
+);
+
+$p_warn = (double)$p_warn;
+$p_crit = (double)$p_crit;
+
+if(!$p_invert && $value > $p_crit || $p_invert && $value < $p_crit) {
+   echo "MEMORY ".$p_type." CRITICAL: ".
+       number_format($value,$p_unit,'.','').$unit_labels[$p_unit].
+       " / ".
+       number_format($p_crit,$p_unit,'.','').$unit_labels[$p_unit].
+       "\n";
+   exit(2);
+}
+if(!$p_invert && $value > $p_warn || $p_invert && $value < $p_warn) {
+   echo "MEMORY ".$p_type." WARNING: ".
+       number_format($value,$p_unit,'.','').$unit_labels[$p_unit].
+       " / ".
+       number_format($p_warn,$p_unit,'.','').$unit_labels[$p_unit].
+       "\n";
+   exit(1);
+}
+echo "MEMORY ".$p_type." OK: ".
+   number_format($value,$p_unit,'.','').$unit_labels[$p_unit].
+   "\n";
+exit(0);
