@@ -32,6 +32,7 @@ MEMORY memfree OK: 406.7MiB
 #### Caveats
 
 - the value warn `-w` and crit `-c` are always integers, if you need greater accuracy chose a smaller unit ``-u``
+  - `check_memory -w 1024 -u 1` is the same as `check_memory -w 1 -u 2`
 - usually almost all values of meminfo are in kB but some aren't
 - make sure to check if the returned values make sense
 - plugin only returns text and no performance data
