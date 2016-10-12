@@ -12,13 +12,17 @@ so ``Inactive(file)`` becomes ``inactive_file``.
 - ``-u UNIT``: 0-3, exponent of 1024 to divide values by, default is 0, returning kB values, 1 will return MiB values, 2 will return GiB values, 3 will return TiB values
 - ``-i``: inverts the check, without this switch the measured value must not be bigger than warn and crit, with -i it must be at least as big as warn and crit
 
-#### Examples:
+#### Sample output
 
-check_memory -t committed_as -w 6 -c 12 -u 2
-	critical if commited memory is at least 12 GiB, warns when it reaches 6 GiB
+```
+./check_memory -t committed_as -w 8 -c 12 -u 2
+MEMORY committed_as CRITICAL: 13.74GiB / 12.00GiB
+```
 
-check_memory -t memfree -w 512 -c 128 -u 1 -i
-        critical if less than 128 MiB memory is still free, warns if less than 512 MiB memory is still free
+```
+./check_memory -t memfree -w 128 -c 256 -u 1 -i
+MEMORY memfree OK: 406.7MiB
+```
 
 #### Requirements
 
